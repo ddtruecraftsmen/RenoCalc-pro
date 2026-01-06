@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RenoCalc Pro - Basement Material Calculator</title>
+    <style>
+        /* Clean Professional Theme - Blue & White */
+        :root {
+            --primary: #2c5aa0;
+            --primary-dark: #1e3f72;
+            --bg: #f9f9f9;
+            --text: #333;
+            --border: #ddd;
+            --white: #fff;
+            --success-bg: #e8f5e8;
+            --success-border: #28a745;
+        }
+
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: var(--bg); color: var(--text); line-height: 1.5; }
+        
+        /* Header */
+        header { text-align: center; margin-bottom: 30px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
+        h1 { color: var(--primary); margin: 0 0 5px; font-size: 28px; }
+        .subtitle { font-size: 14px; color: #666; letter-spacing: 1px; text-transform: uppercase; }
+        .version { font-size: 12px; color: #999; margin-top: 5px; font-family: monospace; }
+
+        /* Layout */
+        .container { display: flex; flex-wrap: wrap; gap: 30px; }
+        .col-left { flex: 1; min-width: 300px; }
+        .col-right { flex: 1.5; min-width: 300px; }
+
+        /* Cards */
+        .card { background: var(--white); padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; border-top: 4px solid var(--primary); }
+        .card h3 { margin-top: 0; color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; }
+
+        /* Forms */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        input[type="number"] { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 4px; box-sizing: border-box; font-size: 16px; }
+        .input-group { position: relative; }
+        .input-suffix { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: #888; pointer-events: none; }
+
+        /* Buttons */
+        .btn { display: inline-block; background: var(--primary); color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; text-align: center; transition: background 0.2s; }
+        .btn:hover { background: var(--primary-dark); }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
+        .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); margin-top: 10px; }
+        .btn-outline:hover { background: #f0f8ff; }
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-sm { padding: 8px 16px; font-size: 14px; }
+
+        /* Material List */
+        .material-list { list-style: none; padding: 0; margin: 0; }
+        .material-item { display: flex; flex-direction: column; padding: 15px 0; border-bottom: 1px dashed var(--border); transition: opacity 0.3s; }
+        .material-item.disabled { opacity: 0.5; }
+        .material-item:last-child { border-bottom: none; }
+        
+        .item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .item-check-group { display: flex; align-items: center; gap: 10px; }
+        .item-check-group input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; }
+        .item-label { font-weight: bold; font-size: 15px; cursor: pointer; }
+        .item-qty { font-family: monospace; font-size: 16px; font-weight: bold; color: var(--primary); }
+        .item-unit { font-size: 12px; color: #888; font-weight: normal; }
+
+        .item-price-row { display: flex; align-items: center; gap: 10px; padding-left: 28px; }
+        .price-input-wrapper { position: relative; flex: 1; max-width: 120px; }
+        .price-symbol { position: absolute; left: 8px; top: 50%; transform: translateY(-50%); color: #888; font-size: 12px; }
+        .price-input { width: 100%; padding: 6px 6px 6px 20px !important; font-family: monospace; font-size: 13px !important; height: 30px; margin-bottom: 0 !important; }
+        .item-total { width: 80px; text-align: right; font-family: monospace; font-size: 14px; font-weight: bold; color: #666; }
+
+        /* Total Section */
+        .total-section { background: #f0f8ff; padding: 20px; border-radius: 8px; border: 1px solid #cce5ff; margin-top: 20px; text-align: center; }
+        .total-label { font-size: 14px; color: #666; margin-bottom: 5px; }
+        .total-amount { font-size: 36px; font-weight: bold; color: var(--primary); font-family: monospace; }
+
+        /* Utilities */
+        .hidden { display: none; }
+        .text-center { text-align: center; }
+        .pro-tip { background: var(--success-bg); padding: 15px; border-left: 4px solid var(--success-border); margin-top: 20px; font-size: 14px; font-style: italic; }
+        
+        /* Footer */
+        footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--border); color: #666; font-size: 14px; }
+        footer a { color: var(--primary); text-decoration: none; font-weight: bold; }
+        footer a:hover { text-decoration: underline; }
+
+        /* Print Styles */
+        @media print {
+            body { background: white; max-width: 100%; padding: 0; }
+            .no-print { display: none !important; }
+            .col-left { display: none; }
+            .col-right { width: 100%; flex: none; }
+            .card { border: none; box-shadow: none; padding: 0; }
+            .price-input { border: none; background: transparent; padding-left: 0; }
+            .price-symbol { display: none; }
+        }
+        
+        @media (max-width: 768px) {
+            .container { flex-direction: column; }
+            .col-left, .col-right { width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="no-print">
+    <h1>RenoCalc Pro</h1>
+    <div class="subtitle">Renovation Material Estimator</div>
+    <div class="version">V1.0.0</div>
+</header>
+
+<div class="container">
+    <!-- Input Section -->
+    <div class="col-left no-print">
+        <div class="card">
+            <h3>Room Dimensions</h3>
+            <p style="font-size: 14px; color: #666; margin-bottom: 20px;">Enter the finished measurements of your basement room.</p>
+            
+            <form id="calcForm" onsubmit="return false;">
+                <div class="form-group">
+                    <label for="length">Length (ft)</label>
+                    <input type="number" id="length" value="20" min="1" step="0.1" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="width">Width (ft)</label>
+                    <input type="number" id="width" value="15" min="1" step="0.1" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="height">Height (ft)</label>
+                    <input type="number" id="height" value="8" min="6" step="0.5" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="waste">Waste Factor (%)</label>
+                    <div class="input-group">
+                        <input type="number" id="waste" value="10" min="0" max="100">
+                        <span class="input-suffix">%</span>
+                    </div>
+                </div>
+
+                <button type="button" class="btn" id="calcBtn" onclick="calculate()">Calculate Materials</button>
+            </form>
+            
+            <div class="pro-tip">
+                <strong>Pro Tip:</strong> This covers walls & floors only—add 10-15% extra for doors, windows, and cuts.
+            </div>
+        </div>
+        
+        <div class="card">
+             <h3>Estimation Logic</h3>
+             <ul style="padding-left: 20px; font-size: 14px; color: #555;">
+                <li>Studs: 16" OC + corners (50% waste factor)</li>
+                <li>Plates: Top & Bottom (2 rows top, 1 bottom)</li>
+                <li>Drywall & Flooring: Includes full waste factor</li>
+                <li>Paint: 2 coats + 25% waste buffer</li>
+             </ul>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="col-right">
+        <div id="welcomeMessage" class="card text-center" style="padding: 50px 20px;">
+            <div style="font-size: 48px; margin-bottom: 20px; opacity: 0.2;">📐</div>
+            <h3>Ready to Calculate</h3>
+            <p>Enter your room dimensions to generate a comprehensive material list.</p>
+        </div>
+
+        <div id="loading" class="hidden text-center" style="padding: 50px;">
+            <p>Crunching the numbers...</p>
+        </div>
+
+        <div id="resultsArea" class="hidden">
+            <div class="card">
+                <h3>Material List & Costs</h3>
+                <div style="margin-bottom: 20px; background: #f0f8ff; padding: 10px; border-radius: 4px; font-size: 13px; color: #555;" class="no-print">
+                    ℹ️ Toggle items to include/exclude them. Update unit prices to refine estimate.
+                </div>
+
+                <ul class="material-list" id="materialList">
+                    <!-- Items injected via JS -->
+                </ul>
+
+                <div class="total-section">
+                    <div class="total-label">Estimated Project Cost</div>
+                    <div class="total-amount" id="grandTotal">$0</div>
+                </div>
+
+                <div class="btn-group no-print">
+                    <button class="btn btn-outline btn-sm" onclick="downloadCSV()">Download CSV</button>
+                    <button class="btn btn-outline btn-sm" onclick="window.print()">Print / PDF</button>
+                    <button class="btn btn-outline btn-sm" onclick="shareResults()">Share</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="no-print">
+    <p>Built by pros for pros. Questions? Hit us up at <a href="https://www.ddtruecraftsmen.com" target="_blank">D&D True Craftsmen</a>.</p>
+</footer>
+
+<script>
+    // State
+    let state = {
+        inputs: { length: 20, width: 15, height: 8, waste: 10 },
+        results: null,
+        prices: {
+            studs: 4.50,
+            plates: 6.00,
+            wallDrywallSheets: 13.00,
+            ceilingDrywallSheets: 13.00,
+            insulationRolls: 25.00,
+            insulationBatts: 55.00,
+            flooringSqFt: 3.50,
+            baseboardFeet: 1.50,
+            paintGallons: 45.00,
+            primerGallons: 30.00
+        },
+        enabled: {
+            studs: true, plates: true, wallDrywallSheets: true, ceilingDrywallSheets: true,
+            insulationRolls: true, insulationBatts: true, flooringSqFt: true,
+            baseboardFeet: true, paintGallons: true, primerGallons: true
+        }
+    };
+
+    // DOM Elements
+    const els = {
+        calcBtn: document.getElementById('calcBtn'),
+        welcome: document.getElementById('welcomeMessage'),
+        loading: document.getElementById('loading'),
+        results: document.getElementById('resultsArea'),
+        list: document.getElementById('materialList'),
+        total: document.getElementById('grandTotal'),
+        inputs: {
+            length: document.getElementById('length'),
+            width: document.getElementById('width'),
+            height: document.getElementById('height'),
+            waste: document.getElementById('waste')
+        }
+    };
+
+    function calculate() {
+        // Get Inputs
+        state.inputs.length = parseFloat(els.inputs.length.value) || 0;
+        state.inputs.width = parseFloat(els.inputs.width.value) || 0;
+        state.inputs.height = parseFloat(els.inputs.height.value) || 0;
+        state.inputs.waste = parseFloat(els.inputs.waste.value) || 0;
+
+        if (!state.inputs.length || !state.inputs.width || !state.inputs.height) {
+            alert('Please fill in all dimensions.');
+            return;
+        }
+
+        // UI Loading
+        els.welcome.classList.add('hidden');
+        els.results.classList.add('hidden');
+        els.loading.classList.remove('hidden');
+        els.calcBtn.disabled = true;
+        els.calcBtn.textContent = 'Calculating...';
+
+        setTimeout(() => {
+            performCalculation();
+            renderList();
+            updateTotal();
+            
+            els.loading.classList.add('hidden');
+            els.results.classList.remove('hidden');
+            els.calcBtn.disabled = false;
+            els.calcBtn.textContent = 'Calculate Materials';
+            els.results.scrollIntoView({ behavior: 'smooth' });
+        }, 600);
+    }
+
+    function performCalculation() {
+        const v = state.inputs;
+        const wasteFactor = 1 + (v.waste / 100);
+        
+        const perimeter = (v.length + v.width) * 2;
+        const wallArea = perimeter * v.height;
+        const floorArea = v.length * v.width;
+
+        // Logic matched to React App
+        const baseStuds = (perimeter / 1.333) + 4;
+        const studWasteFactor = 1 + ((v.waste / 100) / 2);
+        const studs = Math.ceil(baseStuds * studWasteFactor);
+
+        const plateLinearFeet = perimeter * 3;
+        const plates = Math.ceil((plateLinearFeet / 10) * wasteFactor);
+
+        const wallDrywallSheets = Math.ceil((wallArea / 32) * wasteFactor);
+        const ceilingDrywallSheets = Math.ceil((floorArea / 32) * wasteFactor);
+
+        const flooringSqFt = Math.ceil(floorArea * wasteFactor);
+        const baseboardFeet = Math.ceil(perimeter * wasteFactor);
+
+        const paintWasteFactor = 1 + ((v.waste / 100) / 4);
+        const paintGallons = Math.ceil((wallArea / 350) * 2 * paintWasteFactor);
+        const primerGallons = Math.ceil(paintGallons / 2);
+
+        const insulationRolls = Math.ceil((wallArea / 40) * wasteFactor);
+        const insulationBatts = Math.ceil((wallArea / 40) * wasteFactor);
+
+        state.results = {
+            perimeter, wallArea, floorArea, studs, plates, wallDrywallSheets, ceilingDrywallSheets,
+            flooringSqFt, baseboardFeet, paintGallons, primerGallons, insulationRolls, insulationBatts
+        };
+    }
+
+    const itemsConfig = [
+        { key: 'studs', label: '2x4 Studs (8ft)', unit: 'pcs' },
+        { key: 'plates', label: '2x4 Plates (10ft)', unit: 'pcs' },
+        { key: 'wallDrywallSheets', label: 'Wall Drywall (4x8)', unit: 'sheets' },
+        { key: 'ceilingDrywallSheets', label: 'Ceiling Drywall (4x8)', unit: 'sheets' },
+        { key: 'insulationRolls', label: 'R13 Insulation Rolls', unit: 'rolls' },
+        { key: 'insulationBatts', label: 'R13 Insulation Batts', unit: 'bags' },
+        { key: 'flooringSqFt', label: 'Flooring Coverage', unit: 'sq ft' },
+        { key: 'baseboardFeet', label: 'Baseboard Trim', unit: 'ft' },
+        { key: 'paintGallons', label: 'Wall Paint (2 coats)', unit: 'gal' },
+        { key: 'primerGallons', label: 'Primer (1 coat)', unit: 'gal' }
+    ];
+
+    function renderList() {
+        els.list.innerHTML = '';
+        itemsConfig.forEach(item => {
+            const qty = state.results[item.key];
+            if (!qty) return; // Skip if 0
+
+            const li = document.createElement('li');
+            li.className = `material-item ${!state.enabled[item.key] ? 'disabled' : ''}`;
+            li.id = `row-${item.key}`;
+            
+            li.innerHTML = `
+                <div class="item-header">
+                    <div class="item-check-group">
+                        <input type="checkbox" id="check-${item.key}" ${state.enabled[item.key] ? 'checked' : ''} onchange="toggleItem('${item.key}')">
+                        <label class="item-label" for="check-${item.key}">${item.label}</label>
+                    </div>
+                    <div>
+                        <span class="item-qty">${qty}</span>
+                        <span class="item-unit">${item.unit}</span>
+                    </div>
+                </div>
+                <div class="item-price-row">
+                    <div class="price-input-wrapper">
+                        <span class="price-symbol">$</span>
+                        <input type="number" class="price-input" value="${state.prices[item.key]}" min="0" step="0.01" onchange="updatePrice('${item.key}', this.value)" ${!state.enabled[item.key] ? 'disabled' : ''}>
+                    </div>
+                    <div class="item-total" id="total-${item.key}">
+                        $${Math.round(qty * state.prices[item.key])}
+                    </div>
+                </div>
+            `;
+            els.list.appendChild(li);
+        });
+    }
+
+    function toggleItem(key) {
+        state.enabled[key] = !state.enabled[key];
+        const row = document.getElementById(`row-${key}`);
+        const input = row.querySelector('.price-input');
+        
+        if (state.enabled[key]) {
+            row.classList.remove('disabled');
+            input.disabled = false;
+        } else {
+            row.classList.add('disabled');
+            input.disabled = true;
+        }
+        updateRowTotal(key);
+        updateTotal();
+    }
+
+    function updatePrice(key, value) {
+        state.prices[key] = parseFloat(value) || 0;
+        updateRowTotal(key);
+        updateTotal();
+    }
+
+    function updateRowTotal(key) {
+        const qty = state.results[key];
+        const price = state.prices[key];
+        const totalEl = document.getElementById(`total-${key}`);
+        
+        if (state.enabled[key]) {
+            totalEl.textContent = `$${Math.round(qty * price)}`;
+        } else {
+            totalEl.textContent = '$0';
+        }
+    }
+
+    function updateTotal() {
+        let total = 0;
+        itemsConfig.forEach(item => {
+            if (state.enabled[item.key] && state.results[item.key]) {
+                total += state.results[item.key] * state.prices[item.key];
+            }
+        });
+        els.total.textContent = `$${Math.round(total)}`;
+    }
+
+    function downloadCSV() {
+        if (!state.results) return;
+        
+        let csv = "Material,Quantity,Unit,Unit Price,Total Cost,Included\n";
+        
+        itemsConfig.forEach(item => {
+            const qty = state.results[item.key];
+            const price = state.prices[item.key];
+            const cost = qty * price;
+            const included = state.enabled[item.key] ? "Yes" : "No";
+            
+            csv += `"${item.label}",${qty},${item.unit},${price},${cost},${included}\n`;
+        });
+        
+        // Grand Total Row
+        let total = 0;
+        itemsConfig.forEach(item => {
+            if (state.enabled[item.key]) total += state.results[item.key] * state.prices[item.key];
+        });
+        csv += `,,,TOTAL EST.,${Math.round(total)},\n`;
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", "renocalc_estimate.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    function shareResults() {
+        if (!state.results) return;
+        let total = 0;
+        itemsConfig.forEach(item => {
+            if (state.enabled[item.key]) total += state.results[item.key] * state.prices[item.key];
+        });
+
+        const text = `RenoCalc Pro: ${state.results.studs} studs + full list for ${state.inputs.length}x${state.inputs.width} basement = ~$${Math.round(total)}. Free tool from D&D True Craftsmen!`;
+        
+        if (navigator.share) {
+            navigator.share({ title: 'RenoCalc Pro Results', text: text, url: window.location.href });
+        } else {
+            const tempInput = document.createElement('input');
+            document.body.appendChild(tempInput);
+            tempInput.value = text + ' ' + window.location.href;
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+            alert('Link copied—fire it off!');
+        }
+    }
+</script>
+
+</body>
+</html>

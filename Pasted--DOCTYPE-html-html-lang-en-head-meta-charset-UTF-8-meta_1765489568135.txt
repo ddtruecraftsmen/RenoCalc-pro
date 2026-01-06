@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RenoCalc Pro V1.0.0 - Basement Material Calculator</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #f9f9f9; color: #333; line-height: 1.4; }
+        h1 { color: #2c5aa0; text-align: center; margin-bottom: 5px; }
+        h2 { color: #2c5aa0; text-align: center; }
+        .version { text-align: center; color: #666; font-size: 14px; margin-bottom: 20px; }
+        .form-section { float: left; width: 40%; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); min-height: 400px; }
+        .results-section { float: right; width: 55%; margin-left: 5%; }
+        label { display: block; margin: 10px 0 5px; font-weight: bold; }
+        input { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        button { background: #2c5aa0; color: white; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; margin-top: 10px; }
+        button:hover { background: #1e3f72; }
+        #results { display: none; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); min-height: 400px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #f0f8ff; }
+        .pro-tip { background: #e8f5e8; padding: 10px; border-left: 4px solid #28a745; margin-top: 10px; font-style: italic; }
+        .clearfix::after { content: ""; display: table; clear: both; }
+        .logic-section { clear: both; margin-top: 20px; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        footer { text-align: center; margin-top: 40px; font-size: 14px; color: #666; }
+        a { color: #2c5aa0; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        @media (max-width: 768px) { .form-section, .results-section { float: none; width: 100%; margin: 0 0 20px 0; } }
+    </style>
+</head>
+<body>
+    <h1>RenoCalc Pro</h1>
+    <h1>RenoCalc Pro</h1>
+    <div class="version">V1.0.0</div>
+    <h2>RENOVATION MATERIAL ESTIMATOR</h2>
+    <p style="text-align: center; font-size: 18px;">Enter the finished measurements of your basement room.</p>
+
+    <div class="clearfix">
+        <div class="form-section">
+            <h3>Room Dimensions</h3>
+            <p>Enter your room dimensions on the left to generate a comprehensive material list.</p>
+            <label for="length">Length (ft):</label>
+            <input type="number" id="length" value="20" min="1" step="0.1" placeholder="e.g., 20">
+
+            <label for="width">Width (ft):</label>
+            <input type="number" id="width" value="15" min="1" step="0.1" placeholder="e.g., 15">
+
+            <label for="height">Height (ft):</label>
+            <input type="number" id="height" value="8" min="1" step="0.1" placeholder="e.g., 8">
+
+            <label for="waste">Waste Factor (%):</label>
+            <input type="number" id="waste" value="10" min="0" max="20" step="1" placeholder="e.g., 10">
+
+            <button type="button" onclick="calculateMaterials()">Calculate Materials</button>
+            <p style="font-size: 12px; color: #666; margin-top: 10px;">Built by <a href="https://www.ddtruecraftsmen.com" target="_blank">D&D True Craftsmen</a> (15+ years in basements).</p>
+        </div>
+
+        <div class="results-section">
+            <div id="results">
+                <h3>Your Material List</h3>
+                <div id="loading" style="display: none; text-align: center; padding: 20px;">Crunching the numbers...</div>
+                <table id="materialTable" style="display: none;">
+                    <thead>
+                        <tr><th>Material</th><th>Quantity</th><th>Est. Cost</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <div class="pro-tip" id="proTip" style="display: none;">
+                    <strong>Pro Tip:</strong> This covers walls & floors only—add 10-15% extra for doors/windows/cuts.
+                </div>
+                <button id="exportBtn" onclick="exportPDF()" style="width: auto; margin: 10px 0; display: none;">Export to PDF</button>
+                <button id="shareBtn" onclick="shareResults()" style="width: auto; margin: 10px 10px; display: none;">Share List</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="logic-section">
+        <h3>Estimation Logic</h3>
+        <ul>
+            <li>Studs calculated at 16" on-center + corners.</li>
+            <li>Drywall & Flooring include waste factor.</li>
+            <li>Paint assumes 2 coats on fresh drywall.</li>
+        </ul>
+        <p>### Ready to Calculate</p>
+        <p>Enter your room dimensions on the left to generate a comprehensive material list for your renovation project.</p>
+    </div>
+
+    <footer>
+        <p>Built by pros for pros. Questions? Hit us up at <a href="https://www.ddtruecraftsmen.com" target="_blank">D&D True Craftsmen</a>.</p>
+    </footer>
+
+    <script>
+        console.log('RenoCalc V1.0.0 locked & loaded!');
+
+        function calculateMaterials() {
+            console.log('Calc fired—grabbing inputs');
+            const length = parseFloat(document.getElementById('length').value);
+            const width = parseFloat(document.getElementById('width').value);
+            const height = parseFloat(document.getElementById('height').value);
+            const waste = parseFloat(document.getElementById('waste').value) / 100 || 0.1;
+
+            if (!length || !width || !height) {
+                alert('Heads up: Plug in length, width, and height to run it!');
+                return;
+            }
+
+            const loading = document.getElementById('loading');
+            const table = document.getElementById('materialTable');
+            const proTip = document.getElementById('proTip');
+            const exportBtn = document.getElementById('exportBtn');
+            const shareBtn = document.getElementById('shareBtn');
+            const results = document.getElementById('results');
+
+            loading.style.display = 'block';
+            table.style.display = 'none';
+            proTip.style.display = 'none';
+            exportBtn.style.display = 'none';
+            shareBtn.style.display = 'none';
+
+            setTimeout(() => {
+                const perimeter = 2 * (length + width);
+                const wallArea = perimeter * height;
+                const floorArea = length * width;
+                const linearWallFt = perimeter * height;
+                const studs = Math.ceil((linearWallFt / 1.333) + 4) * (1 + waste / 2);
+                const drywallSheets = Math.ceil(wallArea / 32 * (1 + waste));
+                const flooringSheets = Math.ceil(floorArea / 32 * (1 + waste));
+                const paintGallons = Math.ceil(wallArea * 2 / 350 * (1 + waste / 4));
+
+                const studCost = 4.50;
+                const drywallCost = 13;
+                const flooringCost = 25;
+                const paintCost = 30;
+                const totalCost = (studs * studCost) + (drywallSheets * drywallCost) + (flooringSheets * flooringCost) + (paintGallons * paintCost);
+
+                const tbody = document.querySelector('#materialTable tbody');
+                tbody.innerHTML = `
+                    <tr><td>2x4 Studs (8ft)</td><td>${Math.round(studs)}</td><td>$${Math.round(studs * studCost)}</td></tr>
+                    <tr><td>4x8 Drywall Sheets (1/2")</td><td>${drywallSheets}</td><td>$${Math.round(drywallSheets * drywallCost)}</td></tr>
+                    <tr><td>4x8 Plywood/OSB (Flooring)</td><td>${flooringSheets}</td><td>$${Math.round(flooringSheets * flooringCost)}</td></tr>
+                    <tr><td>Interior Paint (2 coats)</td><td>${paintGallons} gallons</td><td>$${Math.round(paintGallons * paintCost)}</td></tr>
+                    <tr><td><strong>Grand Total</strong></td><td>-</td><td><strong>$${Math.round(totalCost)}</strong></td></tr>
+                `;
+
+                loading.style.display = 'none';
+                table.style.display = 'table';
+                proTip.style.display = 'block';
+                exportBtn.style.display = 'inline-block';
+                shareBtn.style.display = 'inline-block';
+                results.style.display = 'block';
+                results.scrollIntoView({ behavior: 'smooth' });
+
+                console.log(`Boom: ${Math.round(studs)} studs, $${Math.round(totalCost)} for ${length}x${width}x${height}`);
+            }, 800);
+        }
+
+        function exportPDF() { window.print(); }
+
+        function shareResults() {
+            const shareText = `RenoCalc hit: ${Math.round(studs)} studs + full list for ${length}x${width} basement = ~$${Math.round(totalCost)}. Free tool from pros!`;
+            if (navigator.share) {
+                navigator.share({ title: 'RenoCalc Pro', text: shareText, url: window.location.href });
+            } else {
+                navigator.clipboard.writeText(shareText + ' ' + window.location.href).then(() => alert('Copied—spread the word!'));
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('All set—form visible, button primed');
+            document.getElementById('length').focus();
+        });
+    </script>
+</body>
+</html>
